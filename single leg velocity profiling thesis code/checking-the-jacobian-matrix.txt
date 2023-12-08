@@ -1,0 +1,118 @@
+% matlab code that checks the jacobian matrix, transformation matrix, rotation matrix and cartesan velocity vector of a Boston Dynamic's Single leg robot
+%set up the the variables
+syms th3;
+syms th2;
+syms th1;
+syms q1;
+syms q2;
+syms q3;
+syms l3;
+syms l2;
+syms l1;
+%Obtain transformation from body to end effector 
+
+zero_T_one = [1,0,0,0;
+    0,cos(th1),-sin(th1),0;
+    0,sin(th1),cos(th1),0;
+    0,0,0,1];
+one_T_two = [cos(th2), 0, sin(th2),0;
+                0 , 1 , 0,l1;
+                -sin(th2) 0 cos(th2),0
+                0,0,0,1];
+two_T_three = [cos(th3), 0, sin(th3),0;
+                0 , 1 , 0, 0;
+                -sin(th3) 0 cos(th3),l2;
+                0,0,0,1];
+three_T_ee =[1,0,0,0;
+    0,1,0,0;
+    0,0,1,l3;
+    0,0,0,1];
+%Obtain transformation from body to end effector 
+
+zero_rot_one = [1,0,0;
+    0,cos(th1),-sin(th1);
+    0,sin(th1),cos(th1)];
+one_rot_two = [cos(th2), 0, sin(th2);
+                0 , 1 , 0;
+                -sin(th2) 0 cos(th2)];
+two_rot_three = [cos(th3), 0, sin(th3);
+                0 , 1 , 0;
+                -sin(th3) 0 cos(th3)];
+three_rot_ee =[1,0,0;
+    0,1,0;
+    0,0,1];
+%state the joint velocity vector
+joint_v= [q1;q2;q3];
+%get the transpose of rotaions
+one_rot_zero = transpose (zero_rot_one);
+disp("one_rot_zero:")
+disp(one_rot_zero)
+two_rot_one = transpose(one_rot_two);
+disp("two_rot_one:")
+disp(two_rot_one)
+three_rot_two = transpose(two_rot_three);
+disp("three_rot_two:")
+disp(three_rot_two)
+ee_rot_three = transpose(three_rot_ee);
+disp("ee_rot_three:")
+disp(ee_rot_three)
+%translation vectors
+p_two=[0;l1;0];
+p_three = [0;0;l2];
+p_ee = [0;0;l3];
+%calculate the cartesan velocities (shea) of frame 1
+one_w_one = q1*[1;0;0];
+one_v_one = [0;0;0];
+one_shea_one =[one_v_one;one_w_one];
+
+disp("one_shea_one:")
+disp(one_shea_one)
+%calculate the cartesan velocities (shea) of frame 2
+
+two_w_two = two_rot_one*one_w_one + q2*[0;1;0];
+one_w_one_times_p_two= cross(one_w_one,p_two);
+two_v_two = two_rot_one*(one_v_one + one_w_one_times_p_two);
+two_shea_two =[two_v_two;two_w_two];
+disp("two_shea_two:");
+disp(two_shea_two);
+%calculate the cartesan velocities (shea) of frame 3
+
+three_w_three = three_rot_two*two_w_two + q3*[0;1;0];
+two_w_two_times_p_three= cross(two_w_two,p_three);
+three_v_three = three_rot_two*(two_v_two + two_w_two_times_p_three);
+three_shea_three =[three_v_three;three_w_three];
+disp("three_shea_three:");
+disp(three_shea_three);
+%calculate the cartesan velocities (shea) of frame end effector
+
+ee_w_ee = ee_rot_three*three_w_three; 
+three_w_three_times_p_ee= cross(three_w_three,p_ee);
+ee_v_ee = ee_rot_three*(three_v_three + three_w_three_times_p_ee);
+ee_shea_ee =[ee_v_ee;ee_w_ee];
+disp("ee_shea_ee:");
+disp(ee_shea_ee);
+%get the full transformation from body to endeffector
+zero_T_ee = zero_T_one*one_T_two*two_T_three*three_T_ee;
+disp("zero_T_ee:");
+disp(zero_T_ee);
+%extract the rotation matrix from body to end effector
+zero_rot_ee =  zero_T_ee(1:3, 1:3);
+
+% Display zero_rot_ee
+disp("zero_rot_ee:");
+disp(zero_rot_ee);
+%calculate the cartesan velocities (shea) of body to endeffector
+
+zero_w_ee = zero_rot_ee * ee_w_ee;
+zero_v_ee = zero_rot_ee * ee_v_ee;
+zero_shea_ee =[zero_v_ee;zero_w_ee];
+
+%extract the jacobian matrix from the joint velocity vector and 
+% the cartesan velocities (shea) of body to endeffector
+disp("zero_shea_ee:");
+disp(zero_shea_ee);
+jacobian_matrix= jacobian(zero_shea_ee,joint_v);
+disp("jacobian_matrix:");
+disp(jacobian_matrix);
+
+

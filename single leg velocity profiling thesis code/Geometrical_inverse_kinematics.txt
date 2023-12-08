@@ -1,0 +1,18 @@
+%%Matlab code for calculating the necessary joint angles for a single leg Boston Dynamic's Spot Robot
+function [th] = inversekinematics(x,y,z)
+l1 = 0.091285;
+l2 = 0.338901;
+l3 = 0.361644;
+%th1
+th1=atan2(y,z);% angle for theta 1
+%th3
+r= sqrt(y^2 + z^2); %hypotinues between point z and y right angle triangle
+k=sqrt(r^2 +(x-l1)^2);%hypotinues between joint 2 and the end effector
+th3 = acos((k^2 -l2^2-l3^2)/(2*l2*l3));% reaaranging the cosine rule to get theta 3
+%th2
+beta =atan2(x-l1,r);%angle of drawn right angle triangle abc
+th3 = (real(th3))*-1;%in some cases the value theta 3 came out as an imaginary number, atan2 is not capable of taking imaginary numbers as inbut 
+alpha= atan2(l3*sin(th3),(l2+l3*cos(th3)));%angle of the drawn right angle triangle aec
+th2 = beta - alpha;%theta 2 can be calculated simply by subtracting the beta angle of the alpha
+th = [th1,th2,th3];
+end
